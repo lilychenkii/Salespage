@@ -2,6 +2,7 @@
 // AI Agent dùng Groq API với tool use để tra cứu đơn hàng
 
 const GROQ_API_KEY = (window.GROQ_API_KEY || localStorage.getItem('GROQ_API_KEY') || '').trim()
+const GROQ_PROXY_URL = '/api/chat'
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
@@ -214,36 +215,47 @@ async function localAssistantReply(userText = '') {
 }
 
 async function callGroq(messages) {
-  if (!GROQ_API_KEY) {
-    return {
-      choices: [
-        {
-          message: {
-            content: 'Chatbot AI đang tạm thời chưa được cấu hình API key. Mình vẫn có thể hỗ trợ bạn tra cứu đơn hàng ở trang Tra cứu đơn hàng nhé.'
-          }
-        }
-      ]
-    }
+  const payload = {
+    model: GROQ_MODEL,
+    messages: [
+      { role: 'system', content: SYSTEM_PROMPT },
+      ...messages
+    ],
+    tools: TOOLS,
+    tool_choice: 'auto',
+    max_tokens: 1024,
+    temperature: 0.7
   }
 
-  const res = await fetch(GROQ_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${GROQ_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        ...messages
-      ],
-      tools: TOOLS,
-      tool_choice: 'auto',
-      max_tokens: 1024,
-      temperature: 0.7
+  let res = null
+
+  // Ưu tiên proxy server để giữ API key ở backend (an toàn cho production).
+  try {
+    res = await fetch(GROQ_PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     })
-  })
+  } catch {
+    res = null
+  }
+
+  // Fallback local key cho môi trường dev nếu có cấu hình thủ công.
+  if ((!res || !res.ok) && GROQ_API_KEY) {
+    res = await fetch(GROQ_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${GROQ_API_KEY}`
+      },
+      body: JSON.stringify(payload)
+    })
+  }
+
+  if (!res || !res.ok) {
+    const errText = res ? await res.text() : 'No response from API'
+    throw new Error(`AI API unavailable: ${errText}`)
+  }
 
   if (!res.ok) {
     const err = await res.text()
@@ -363,12 +375,12 @@ async function handleSend() {
     removeTyping(typingId)
     let reply = ''
 
-    if (!GROQ_API_KEY) {
-      reply = await localAssistantReply(text)
-      conversationHistory.push({ role: 'assistant', content: reply })
-    } else {
+    try {
       const data = await callGroq(conversationHistory)
       reply = await processGroqResponse(data)
+    } catch {
+      reply = await localAssistantReply(text)
+      conversationHistory.push({ role: 'assistant', content: reply })
     }
 
     addMessage('bot', reply)
