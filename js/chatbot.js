@@ -77,15 +77,7 @@ async function executeTool(toolName, args) {
         } else if (args.email) {
           query = query.eq('customer_email', args.email.toLowerCase().trim())
         } else {
-          const user = await getCurrentUser()
-          if (user) {
-            query = query
-              .eq('user_id', user.id)
-              .order('created_at', { ascending: false })
-              .limit(3)
-          } else {
-            return 'Vui lòng cung cấp mã đơn hàng hoặc email để tra cứu.'
-          }
+          return 'Bạn vui lòng gửi mã đơn (ví dụ: DURI12345678) hoặc email đặt hàng để mình tra cứu nhé.'
         }
 
         const { data: orders, error } = await query
@@ -161,6 +153,16 @@ Luôn trả lời bằng tiếng Việt, ngắn gọn, thân thiện. Xưng "mì
 
 let conversationHistory = []
 
+function findRecentOrderCodeFromHistory() {
+  for (let i = conversationHistory.length - 1; i >= 0; i--) {
+    const msg = conversationHistory[i]
+    const content = typeof msg?.content === 'string' ? msg.content : ''
+    const found = parseOrderCode(content)
+    if (found) return found
+  }
+  return ''
+}
+
 function parseOrderCode(text = '') {
   const match = text.match(/DURI\s*\d{6,}/i)
   return match ? match[0].replace(/\s+/g, '') : ''
@@ -188,8 +190,13 @@ async function localAssistantReply(userText = '') {
   const productKeywords = /(sản phẩm|giá|bao nhiêu|còn hàng|danh mục|mua gì)/
 
   if (orderKeywords.test(text)) {
-    const orderCode = parseOrderCode(userText)
+    const orderCode = parseOrderCode(userText) || findRecentOrderCodeFromHistory()
     const email = parseEmail(userText)
+
+    if (!orderCode && !email) {
+      return 'Bạn vui lòng gửi mã đơn (ví dụ: DURI12345678) hoặc email đặt hàng để mình tra cứu chính xác nhé.'
+    }
+
     return executeTool('get_order_status', {
       order_code: orderCode || undefined,
       email: email || undefined
