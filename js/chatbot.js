@@ -160,6 +160,59 @@ Luôn trả lời bằng tiếng Việt, ngắn gọn, thân thiện. Xưng "mì
 
 let conversationHistory = []
 
+function parseOrderCode(text = '') {
+  const match = text.match(/DURI\s*\d{6,}/i)
+  return match ? match[0].replace(/\s+/g, '') : ''
+}
+
+function parseEmail(text = '') {
+  const match = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)
+  return match ? match[0] : ''
+}
+
+function parseProvince(text = '') {
+  const known = [
+    'hà nội', 'hồ chí minh', 'tp hcm', 'sài gòn', 'đà nẵng', 'cần thơ',
+    'hải phòng', 'đồng nai', 'bình dương', 'quảng ninh', 'nghệ an', 'huế'
+  ]
+  const lower = text.toLowerCase()
+  const found = known.find(p => lower.includes(p))
+  return found || ''
+}
+
+async function localAssistantReply(userText = '') {
+  const text = userText.toLowerCase()
+  const orderKeywords = /(đơn hàng|mã đơn|trạng thái|đang ở đâu|kiểm tra đơn)/
+  const shippingKeywords = /(ship|giao hàng|vận chuyển|bao lâu|mấy ngày)/
+  const productKeywords = /(sản phẩm|giá|bao nhiêu|còn hàng|danh mục|mua gì)/
+
+  if (orderKeywords.test(text)) {
+    const orderCode = parseOrderCode(userText)
+    const email = parseEmail(userText)
+    return executeTool('get_order_status', {
+      order_code: orderCode || undefined,
+      email: email || undefined
+    })
+  }
+
+  if (shippingKeywords.test(text)) {
+    return executeTool('get_shipping_info', { province: parseProvince(userText) || undefined })
+  }
+
+  if (productKeywords.test(text)) {
+    const cleaned = userText
+      .replace(/(sản phẩm|giá|bao nhiêu|còn hàng|danh mục|mua gì|cho mình|giúp mình)/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+
+    return executeTool('get_product_info', {
+      product_name: cleaned || 'DURI'
+    })
+  }
+
+  return 'Mình có thể hỗ trợ bạn 3 việc nhanh:\n• Tra cứu đơn hàng (gửi mã DURI... hoặc email)\n• Tìm sản phẩm và giá\n• Thông tin vận chuyển\n\nBạn muốn mình hỗ trợ mục nào?'
+}
+
 async function callGroq(messages) {
   if (!GROQ_API_KEY) {
     return {
@@ -307,9 +360,17 @@ async function handleSend() {
   }
 
   try {
-    const data = await callGroq(conversationHistory)
     removeTyping(typingId)
-    const reply = await processGroqResponse(data)
+    let reply = ''
+
+    if (!GROQ_API_KEY) {
+      reply = await localAssistantReply(text)
+      conversationHistory.push({ role: 'assistant', content: reply })
+    } else {
+      const data = await callGroq(conversationHistory)
+      reply = await processGroqResponse(data)
+    }
+
     addMessage('bot', reply)
   } catch (err) {
     console.error('Chatbot error:', err)
