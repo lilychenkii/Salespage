@@ -18,10 +18,29 @@ function normalizeImageUrl(url = '') {
   if (!value) return ''
   if (/^(data:|blob:)/i.test(value)) return value
 
+  const encodePathSegments = (path = '') => path
+    .split('/')
+    .map((segment, index) => {
+      if (index === 0 && segment === '') return ''
+      try {
+        return encodeURIComponent(decodeURIComponent(segment))
+      } catch {
+        return encodeURIComponent(segment)
+      }
+    })
+    .join('/')
+
   try {
-    return encodeURI(decodeURI(value))
+    const parsed = new URL(value, window.location.origin)
+    parsed.pathname = encodePathSegments(parsed.pathname)
+
+    // Nếu là URL tuyệt đối thì trả tuyệt đối, nếu là đường dẫn tương đối thì trả tương đối.
+    if (/^https?:\/\//i.test(value)) {
+      return parsed.toString()
+    }
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`.replace(/^\//, '')
   } catch {
-    return encodeURI(value)
+    return encodePathSegments(value)
   }
 }
 
