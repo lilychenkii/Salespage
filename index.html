@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DURI | Smart Baby Care Solutions from Korea</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">DURI</a>
+    <ul class="navbar-links">
+      <li><a href="index.html">Trang chủ</a></li>
+      <li class="nav-products">
+        <a href="products.html">Sản phẩm</a>
+        <ul class="nav-dropdown">
+          <li><a href="products.html">Tất cả sản phẩm</a></li>
+          <li><a href="products.html?category=Cho%20bé%20ăn">Cho bé ăn</a></li>
+          <li><a href="products.html?category=Đi%20vệ%20sinh">Đi vệ sinh</a></li>
+          <li><a href="products.html?category=Máy%20hút%20mũi">Máy hút mũi</a></li>
+          <li><a href="products.html?category=Phòng%20tắm">Phòng tắm</a></li>
+          <li><a href="products.html?category=Sinh%20hoạt">Sinh hoạt</a></li>
+        </ul>
+      </li>
+      <li><a href="orders.html">Tra cứu đơn hàng</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <a href="cart.html" class="btn btn-outline btn-sm cart-btn">
+        🛒 Giỏ hàng
+        <span class="cart-count" id="cart-count">0</span>
+      </a>
+    </div>
+  </nav>
+
+  <section class="hero-stage" id="top">
+    <div class="hero-orb hero-orb-right"></div>
+    <div class="hero-orb hero-orb-left"></div>
+    <div class="landing-shell hero-layout">
+      <div>
+        <div class="hero-flash-badge">🔥 Flash Sale - Giảm giá đến 30%</div>
+        <h1 class="hero-title">DURI - Smart Baby Care Solutions from Korea</h1>
+        <p class="hero-subtitle">Đồng hành cùng hơn 1 triệu gia đình, mang lại sự an tâm tuyệt đối cho sự phát triển khỏe mạnh của trẻ nhỏ.</p>
+        <div class="hero-countdown">
+          <p>⏰ Ưu đãi kết thúc sau:</p>
+          <div class="countdown-grid">
+            <div>
+              <strong id="countdown-hours">00</strong>
+              <span>Giờ</span>
+            </div>
+            <em>:</em>
+            <div>
+              <strong id="countdown-minutes">00</strong>
+              <span>Phút</span>
+            </div>
+            <em>:</em>
+            <div>
+              <strong id="countdown-seconds">00</strong>
+              <span>Giây</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-actions">
+          <a href="products.html" class="btn btn-dark">Mua sắm ngay</a>
+          <a href="products.html" class="btn btn-outline">Xem sản phẩm</a>
+        </div>
+        <div class="hero-proof-grid">
+          <article class="hero-proof-card">
+            <strong>1M+</strong>
+            <span>Gia đình tin chọn</span>
+          </article>
+          <article class="hero-proof-card">
+            <strong>24M</strong>
+            <span>Bảo hành chính hãng</span>
+          </article>
+          <article class="hero-proof-card">
+            <strong>15'</strong>
+            <span>Phản hồi tư vấn</span>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section" id="benefits">
+    <div class="landing-shell">
+      <h2 class="landing-title">Tại sao cha mẹ tin dùng DURI?</h2>
+      <p class="landing-subtitle">Công nghệ chăm sóc bé an toàn, dễ dùng và tối ưu chi phí cho gia đình hiện đại.</p>
+      <div class="benefit-grid">
+        <article class="benefit-card">
+          <div class="benefit-number">01</div>
+          <h3>An toàn tuyệt đối</h3>
+          <p>Vật liệu chuẩn FDA, không BPA, tối ưu cho làn da nhạy cảm và nhu cầu sử dụng hàng ngày.</p>
+        </article>
+        <article class="benefit-card">
+          <div class="benefit-number">02</div>
+          <h3>Tiết kiệm thời gian</h3>
+          <p>Thiết kế thông minh giúp cha mẹ thao tác nhanh gọn, giảm áp lực chăm con trong giờ cao điểm.</p>
+        </article>
+        <article class="benefit-card">
+          <div class="benefit-number">03</div>
+          <h3>Tiết kiệm chi phí</h3>
+          <p>Độ bền cao và khả năng tái sử dụng tốt giúp tối ưu ngân sách chăm sóc bé dài hạn.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section section-soft" id="features">
+    <div class="landing-shell">
+      <h2 class="landing-title">Sản phẩm nổi bật</h2>
+      <p class="landing-subtitle">Một vài giải pháp được yêu thích nhất trong hệ sinh thái DURI.</p>
+      <div class="feature-stack">
+        <article class="feature-row">
+          <div class="feature-image-wrap">
+            <img src="images/Phòng tắm/NEW%20Doori%20Ultra%20Atofilter%20Shower%20Head.jpg" alt="Ultra Atofilter Shower Head" />
+          </div>
+          <div class="feature-copy">
+            <span class="feature-tag">Premium Filter</span>
+            <h3>Ultra Ato Filter Shower Head</h3>
+            <ul>
+              <li>Lọc 3 tầng, giảm cặn và tạp chất trong nước.</li>
+              <li>Dịu nhẹ với da nhạy cảm của trẻ nhỏ.</li>
+              <li>Lắp đặt nhanh, phù hợp đa số phòng tắm gia đình.</li>
+            </ul>
+          </div>
+        </article>
+        <article class="feature-row reverse">
+          <div class="feature-image-wrap">
+            <img src="images/Đi vệ sinh/3.0%20Triple%20Silent%20Baby%20Toilet%20Seat%20Cover.jpg" alt="Toilet Seat Cover" />
+          </div>
+          <div class="feature-copy">
+            <span class="feature-tag">Flagship Product</span>
+            <h3>DURI Potty Seat 4.0</h3>
+            <ul>
+              <li>Thiết kế công thái học giúp bé tự lập sớm.</li>
+              <li>Bề mặt kháng khuẩn, hạn chế trơn trượt.</li>
+              <li>Chất liệu bền bỉ, an toàn và dễ vệ sinh.</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section" id="reviews">
+    <div class="landing-shell">
+      <h2 class="landing-title">Cha mẹ trẻ tin dùng và lan tỏa</h2>
+      <p class="landing-subtitle">4.9/5.0 từ hàng nghìn phản hồi tích cực.</p>
+      <div class="review-carousel">
+        <button type="button" class="review-nav" id="review-prev" aria-label="Xem đánh giá trước">‹</button>
+        <div class="review-window">
+          <div class="review-track" id="review-track">
+            <article class="review-card">
+              <h4>Linh Chi</h4>
+              <p>★★★★★</p>
+              <span>"Da bé nhạy cảm nên vòi lọc nước DURI thực sự là cứu tinh cho nhà mình."</span>
+            </article>
+            <article class="review-card">
+              <h4>Mẹ Bun</h4>
+              <p>★★★★★</p>
+              <span>"Thiết kế chắc chắn, bé tự đi vệ sinh dễ hơn, mẹ đỡ vất vả hẳn."</span>
+            </article>
+            <article class="review-card">
+              <h4>Hà My</h4>
+              <p>★★★★★</p>
+              <span>"Sản phẩm hoàn thiện đẹp, dùng thực tế rất tiện và đáng tiền."</span>
+            </article>
+            <article class="review-card">
+              <h4>Thu Hà</h4>
+              <p>★★★★★</p>
+              <span>"Giao nhanh, tư vấn kỹ, chất lượng đúng như kỳ vọng ban đầu."</span>
+            </article>
+          </div>
+        </div>
+        <button type="button" class="review-nav" id="review-next" aria-label="Xem đánh giá tiếp theo">›</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section section-soft" id="faq">
+    <div class="landing-shell narrow">
+      <h2 class="landing-title">Câu hỏi thường gặp</h2>
+      <div class="faq-list">
+        <details>
+          <summary>Sản phẩm có phù hợp cho trẻ sơ sinh không?</summary>
+          <p>Có. DURI ưu tiên chất liệu an toàn và các tính năng hỗ trợ phù hợp cho làn da nhạy cảm của bé.</p>
+        </details>
+        <details>
+          <summary>Thời gian giao hàng mất bao lâu?</summary>
+          <p>Thông thường từ 1 đến 3 ngày làm việc, tùy theo khu vực nhận hàng.</p>
+        </details>
+        <details>
+          <summary>Chính sách bảo hành như thế nào?</summary>
+          <p>Hầu hết sản phẩm được bảo hành chính hãng tối đa 24 tháng theo điều kiện của từng dòng.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-shell">
+      <div class="footer-top">
+        <div class="footer-col">
+          <h3>DURI</h3>
+          <p>Đồng hành cùng cha mẹ Việt trong hành trình chăm sóc bé. Giải pháp an toàn, thông minh và tiện lợi cho gia đình hiện đại.</p>
+          <div class="footer-badges">
+            <span class="footer-badge">FDA Certified</span>
+            <span class="footer-badge">BPA-Free</span>
+            <span class="footer-badge">Korean Tech</span>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4>Liên hệ (Contact Us)</h4>
+          <p class="footer-contact-name">CÔNG TY TNHH PRESENT KOREA</p>
+          <ul>
+            <li>Trụ sở chính: Busan, Hàn Quốc</li>
+            <li>Văn phòng đại diện: 669 Đỗ Mười, Phường Linh Xuân, TP. Thủ Đức (TP. HCM)</li>
+            <li>Hotline: 037.355.1519</li>
+            <li>Email: hello@duri.vn</li>
+            <li>8:00 - 17:30 (Thứ 2 - Thứ 7)</li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Hỗ trợ khách hàng (Support)</h4>
+          <ul>
+            <li><a href="orders.html">Câu hỏi thường gặp (FAQs)</a></li>
+            <li><a href="products.html">Tư vấn sản phẩm</a></li>
+            <li><a href="#features">Gói ưu đãi</a></li>
+            <li><a href="orders.html">Hướng dẫn bảo hành</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Chính sách (Policy)</h4>
+          <ul>
+            <li><a href="orders.html">Chính sách bảo mật thông tin</a></li>
+            <li><a href="orders.html">Điều khoản sử dụng</a></li>
+            <li><a href="orders.html">Chính sách đổi trả & bảo hành</a></li>
+            <li><a href="orders.html">Vận chuyển & thanh toán</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <hr class="footer-divider" />
+
+      <div class="footer-bottom">
+        <p class="footer-social-title">Kết nối với chúng tôi</p>
+        <div class="footer-social">
+          <a class="social-link" href="#" aria-label="Facebook">f</a>
+          <a class="social-link" href="#" aria-label="Instagram">ig</a>
+          <a class="social-link" href="#" aria-label="Zalo">Z</a>
+        </div>
+        <p class="footer-copy">DURI © 2024. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- CHATBOT -->
+  <div id="chat-widget">
+    <div id="chat-window" style="display:none">
+      <div id="chat-header">
+        <div>
+          <div id="chat-name">DURI Assistant</div>
+          <div id="chat-status">🟢 Đang hoạt động</div>
+        </div>
+        <button id="chat-close-btn">✕</button>
+      </div>
+      <div id="chat-messages"></div>
+      <div id="chat-input-area">
+        <input id="chat-input" type="text" placeholder="Nhập câu hỏi..." />
+        <button id="chat-send">➤</button>
+      </div>
+    </div>
+    <button id="chat-toggle">💬</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/ui-effects.js"></script>
+  <script src="js/home.js"></script>
+  <script src="js/chatbot.js"></script>
+</body>
+</html>

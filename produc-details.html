@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DURI – Chi tiết sản phẩm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">DURI</a>
+    <ul class="navbar-links">
+      <li class="nav-products">
+        <a href="products.html">Sản phẩm</a>
+        <ul class="nav-dropdown">
+          <li><a href="products.html">Tất cả sản phẩm</a></li>
+          <li><a href="products.html?category=Cho%20bé%20ăn">Cho bé ăn</a></li>
+          <li><a href="products.html?category=Đi%20vệ%20sinh">Đi vệ sinh</a></li>
+          <li><a href="products.html?category=Máy%20hút%20mũi">Máy hút mũi</a></li>
+          <li><a href="products.html?category=Phòng%20tắm">Phòng tắm</a></li>
+          <li><a href="products.html?category=Sinh%20hoạt">Sinh hoạt</a></li>
+        </ul>
+      </li>
+      <li><a href="orders.html">Tra cứu đơn hàng</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <a href="cart.html" class="btn btn-outline btn-sm cart-btn">
+        🛒 Giỏ hàng
+        <span class="cart-count" id="cart-count">0</span>
+      </a>
+    </div>
+  </nav>
+
+  <div style="max-width:1000px; margin:20px auto; padding:0 24px; font-size:0.85rem; color:#9ca3af">
+    <a href="products.html" style="color:#9ca3af">Sản phẩm</a> /
+    <span id="breadcrumb-name">Sản phẩm</span>
+  </div>
+
+  <div id="product-detail-container">
+    <div class="loading-spinner"><div class="spinner"></div></div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-shell">
+      <div class="footer-top">
+        <div class="footer-col">
+          <h3>DURI</h3>
+          <p>Dong hanh cung cha me Viet trong hanh trinh cham soc be. Giai phap an toan, thong minh va tien loi cho gia dinh hien dai.</p>
+          <div class="footer-badges">
+            <span class="footer-badge">FDA Certified</span>
+            <span class="footer-badge">BPA-Free</span>
+            <span class="footer-badge">Korean Tech</span>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4>Lien he (Contact Us)</h4>
+          <p class="footer-contact-name">CONG TY TNHH PRESENT KOREA</p>
+          <ul>
+            <li>Tru so chinh: Busan, Han Quoc</li>
+            <li>Van phong dai dien: 669 Do Muoi, Phuong Linh Xuan, TP. Thu Duc (TP. HCM)</li>
+            <li>Hotline: 037.355.1519</li>
+            <li>Email: hello@duri.vn</li>
+            <li>8:00 - 17:30 (Thu 2 - Thu 7)</li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Ho tro khach hang (Support)</h4>
+          <ul>
+            <li><a href="orders.html">Cau hoi thuong gap (FAQs)</a></li>
+            <li><a href="products.html">Tu van san pham</a></li>
+            <li><a href="products.html">Goi uu dai</a></li>
+            <li><a href="orders.html">Huong dan bao hanh</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Chinh sach (Policy)</h4>
+          <ul>
+            <li><a href="orders.html">Chinh sach bao mat thong tin</a></li>
+            <li><a href="orders.html">Dieu khoan su dung</a></li>
+            <li><a href="orders.html">Chinh sach doi tra & bao hanh</a></li>
+            <li><a href="orders.html">Van chuyen & thanh toan</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <hr class="footer-divider" />
+
+      <div class="footer-bottom">
+        <p class="footer-social-title">Ket noi voi chung toi</p>
+        <div class="footer-social">
+          <a class="social-link" href="#" aria-label="Facebook">f</a>
+          <a class="social-link" href="#" aria-label="Instagram">ig</a>
+          <a class="social-link" href="#" aria-label="Zalo">Z</a>
+        </div>
+        <p class="footer-copy">DURI © 2024. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- CHATBOT -->
+  <div id="chat-widget">
+    <div id="chat-window" style="display:none">
+      <div id="chat-header">
+        <div>
+          <div id="chat-name">DURI Assistant</div>
+          <div id="chat-status">🟢 Đang hoạt động</div>
+        </div>
+        <button id="chat-close-btn">✕</button>
+      </div>
+      <div id="chat-messages"></div>
+      <div id="chat-input-area">
+        <input id="chat-input" type="text" placeholder="Nhập câu hỏi..." />
+        <button id="chat-send">➤</button>
+      </div>
+    </div>
+    <button id="chat-toggle">💬</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/ui-effects.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script>
+    let currentProduct = null
+    let qty = 1
+
+    async function loadProduct() {
+      const id = new URLSearchParams(window.location.search).get('id')
+      const container = document.getElementById('product-detail-container')
+      if (!id) { window.location.href = 'index.html'; return }
+
+      try {
+        const { data: p, error } = await db.from('products').select('*').eq('id', id).single()
+        if (error || !p) throw new Error()
+
+        currentProduct = p
+        const safeImageUrl = resolveProductImage(p.id, p.image_url)
+        document.title = `DURI – ${p.name}`
+        document.getElementById('breadcrumb-name').textContent = p.name
+
+        container.innerHTML = `
+          <div class="product-detail">
+            <div>
+              <img class="product-detail-img" src="${safeImageUrl}" alt="${p.name}"
+                onerror="this.src='https://placehold.co/500x500/F5F1ED/333333?text=DURI'" />
+            </div>
+            <div class="product-detail-info">
+              <div style="font-size:0.8rem;font-weight:600;color:#f97316;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">
+                ${p.category || ''}
+              </div>
+              <h1>${p.name}</h1>
+              <div class="product-detail-price">${formatPrice(p.price)}</div>
+              <div class="product-detail-desc">${p.description || ''}</div>
+              <div style="font-size:0.85rem;color:#6b7280;margin-bottom:16px">
+                📦 Còn hàng: <strong style="color:#16a34a">${p.stock} sản phẩm</strong>
+              </div>
+              <div class="qty-control">
+                <button class="qty-btn" onclick="changeQty(-1)">−</button>
+                <span class="qty-value" id="qty-display">1</span>
+                <button class="qty-btn" onclick="changeQty(1)">+</button>
+              </div>
+              <div style="display:flex;gap:12px;flex-wrap:wrap">
+                <button class="btn btn-dark" onclick="handleAddToCart()">🛒 Thêm vào giỏ hàng</button>
+                <button class="btn btn-orange" onclick="handleBuyNow()">⚡ Mua ngay</button>
+              </div>
+              <div style="margin-top:24px;padding:16px;background:#F5F1ED;border-radius:12px;font-size:0.85rem;color:#6b7280;line-height:1.8">
+                ✅ Hàng chính hãng từ Hàn Quốc<br/>
+                🚚 Giao hàng toàn quốc 1-3 ngày<br/>
+                🔄 Đổi trả trong 7 ngày<br/>
+                🛡️ Bảo hành 24 tháng
+              </div>
+            </div>
+          </div>`
+      } catch {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">⚠️</div>
+            <h3>Không tìm thấy sản phẩm</h3>
+            <a href="products.html" class="btn btn-dark" style="margin-top:16px">Quay lại</a>
+          </div>`
+      }
+    }
+
+    function changeQty(delta) {
+      qty = Math.max(1, qty + delta)
+      document.getElementById('qty-display').textContent = qty
+    }
+
+    function handleAddToCart() {
+      if (!currentProduct) return
+      const safeImageUrl = resolveProductImage(currentProduct.id, currentProduct.image_url)
+      for (let i = 0; i < qty; i++) addToCart(currentProduct.id, currentProduct.name, currentProduct.price, safeImageUrl)
+      if (qty > 1) showToast(`✓ Đã thêm ${qty} sản phẩm`, 'success')
+    }
+
+    function handleBuyNow() {
+      handleAddToCart()
+      setTimeout(() => window.location.href = 'cart.html', 500)
+    }
+
+    document.addEventListener('DOMContentLoaded', loadProduct)
+  </script>
+</body>
+</html>

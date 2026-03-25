@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DURI Admin – Quản lý đơn hàng</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .admin-page { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+    .admin-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 28px;
+    }
+    .admin-stats {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 16px; margin-bottom: 28px;
+    }
+    .stat-card {
+      background: #fff; border-radius: 14px;
+      border: 1px solid #e8e3dd; padding: 18px 20px;
+    }
+    .stat-label { font-size: 0.78rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.06em; }
+    .stat-value { font-size: 1.6rem; font-weight: 700; color: #111827; margin-top: 4px; }
+
+    .filter-bar {
+      display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 7px 16px; border-radius: 20px; border: 1.5px solid #e8e3dd;
+      background: #fff; font-family: 'Quicksand', sans-serif;
+      font-size: 0.85rem; font-weight: 600; color: #6b7280;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: #333; color: #fff; border-color: #333;
+    }
+
+    .orders-table { width: 100%; border-collapse: collapse; }
+    .orders-table th {
+      text-align: left; padding: 12px 16px;
+      font-size: 0.78rem; font-weight: 700;
+      color: #9ca3af; text-transform: uppercase;
+      letter-spacing: 0.06em; border-bottom: 2px solid #e8e3dd;
+    }
+    .orders-table td {
+      padding: 14px 16px; border-bottom: 1px solid #f0ebe5;
+      font-size: 0.88rem; vertical-align: top;
+    }
+    .orders-table tr:hover td { background: #faf8f6; }
+
+    .status-select {
+      padding: 5px 10px; border-radius: 20px;
+      border: 1.5px solid #e8e3dd; font-family: 'Quicksand', sans-serif;
+      font-size: 0.82rem; font-weight: 600; cursor: pointer;
+      outline: none; background: #fff;
+    }
+    .status-select:focus { border-color: #333; }
+
+    .order-items-mini { font-size: 0.78rem; color: #9ca3af; margin-top: 4px; }
+
+    /* Login overlay */
+    #admin-login {
+      min-height: 100vh; background: linear-gradient(120deg, #f7f3ef, #ede5dc);
+      display: flex; align-items: center; justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="admin-login">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="auth-logo-text">DURI</div>
+        <div style="font-size:0.8rem;color:#9ca3af;margin-top:4px">Admin Panel</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mật khẩu admin</label>
+        <input class="form-input" type="password" id="admin-password"
+          placeholder="Nhập mật khẩu"
+          onkeydown="if(event.key==='Enter') checkLogin()" />
+      </div>
+      <button class="btn btn-dark btn-full" onclick="checkLogin()">Đăng nhập</button>
+    </div>
+  </div>
+
+  <!-- ADMIN PANEL (ẩn ban đầu) -->
+  <div id="admin-panel" style="display:none">
+
+    <nav class="navbar">
+      <a href="#" class="navbar-brand">DURI Admin</a>
+      <div class="navbar-actions">
+        <a href="index.html" class="btn btn-outline btn-sm" target="_blank">Xem shop →</a>
+        <button class="btn btn-outline btn-sm" onclick="adminLogout()">Đăng xuất</button>
+      </div>
+    </nav>
+
+    <div class="admin-page">
+      <div class="admin-header">
+        <h1 style="font-size:1.3rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em">
+          📦 Quản lý đơn hàng
+        </h1>
+        <button class="btn btn-outline btn-sm" onclick="loadOrders()">🔄 Làm mới</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="admin-stats">
+        <div class="stat-card">
+          <div class="stat-label">Tổng đơn</div>
+          <div class="stat-value" id="stat-total">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Chờ xử lý</div>
+          <div class="stat-value" id="stat-pending" style="color:#d97706">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Đang giao</div>
+          <div class="stat-value" id="stat-shipping" style="color:#0284c7">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Đã giao</div>
+          <div class="stat-value" id="stat-delivered" style="color:#16a34a">0</div>
+        </div>
+      </div>
+
+      <!-- Filter -->
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterOrders(null, this)">Tất cả</button>
+        <button class="filter-btn" onclick="filterOrders('Đặt hàng', this)">📋 Đặt hàng</button>
+        <button class="filter-btn" onclick="filterOrders('Đang chuẩn bị', this)">📦 Chuẩn bị</button>
+        <button class="filter-btn" onclick="filterOrders('Đang giao', this)">🚚 Đang giao</button>
+        <button class="filter-btn" onclick="filterOrders('Đã giao', this)">✅ Đã giao</button>
+        <button class="filter-btn" onclick="filterOrders('Đã hủy', this)">❌ Đã hủy</button>
+      </div>
+
+      <!-- Table -->
+      <div style="background:#fff;border-radius:16px;border:1px solid #e8e3dd;overflow:hidden">
+        <div id="orders-loading" style="display:none">
+          <div class="loading-spinner"><div class="spinner"></div></div>
+        </div>
+        <table class="orders-table" id="orders-table">
+          <thead>
+            <tr>
+              <th>Mã đơn</th>
+              <th>Khách hàng</th>
+              <th>Sản phẩm</th>
+              <th>Tổng tiền</th>
+              <th>Ngày đặt</th>
+              <th>Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody id="orders-tbody"></tbody>
+        </table>
+        <div id="orders-empty" style="display:none">
+          <div class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <h3>Không có đơn hàng</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DURI – Giỏ hàng</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">DURI</a>
+    <ul class="navbar-links">
+      <li class="nav-products">
+        <a href="products.html">Sản phẩm</a>
+        <ul class="nav-dropdown">
+          <li><a href="products.html">Tất cả sản phẩm</a></li>
+          <li><a href="products.html?category=Cho%20bé%20ăn">Cho bé ăn</a></li>
+          <li><a href="products.html?category=Đi%20vệ%20sinh">Đi vệ sinh</a></li>
+          <li><a href="products.html?category=Máy%20hút%20mũi">Máy hút mũi</a></li>
+          <li><a href="products.html?category=Phòng%20tắm">Phòng tắm</a></li>
+          <li><a href="products.html?category=Sinh%20hoạt">Sinh hoạt</a></li>
+        </ul>
+      </li>
+      <li><a href="orders.html">Tra cứu đơn hàng</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <a href="cart.html" class="btn btn-outline btn-sm cart-btn">
+        🛒 Giỏ hàng
+        <span class="cart-count" id="cart-count">0</span>
+      </a>
+    </div>
+  </nav>
+
+  <div style="max-width:900px;margin:32px auto 0;padding:0 24px">
+    <h1 style="font-size:1.4rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#333">
+      🛒 Giỏ hàng
+    </h1>
+  </div>
+
+  <!-- Empty -->
+  <div id="cart-empty" style="display:none">
+    <div class="empty-state">
+      <div class="empty-state-icon">🛒</div>
+      <h3>Giỏ hàng trống</h3>
+      <p>Hãy thêm sản phẩm vào giỏ hàng.</p>
+      <a href="products.html" class="btn btn-dark">Mua sắm ngay</a>
+    </div>
+  </div>
+
+  <!-- Cart content -->
+  <div class="cart-page" id="cart-content" style="display:none">
+    <div>
+      <div class="cart-items" id="cart-items"></div>
+      <div style="margin-top:16px">
+        <a href="products.html" style="font-size:0.85rem;color:#6b7280">← Tiếp tục mua sắm</a>
+      </div>
+    </div>
+
+    <div class="cart-summary">
+      <h3>Tóm tắt đơn hàng</h3>
+      <div class="summary-row">
+        <span>Tạm tính</span>
+        <span id="summary-subtotal">0đ</span>
+      </div>
+      <div class="summary-row">
+        <span>Phí vận chuyển</span>
+        <span id="summary-shipping">30.000đ</span>
+      </div>
+      <div class="summary-row total">
+        <span>Tổng cộng</span>
+        <span id="summary-total">0đ</span>
+      </div>
+      <a href="checkout.html" class="btn btn-orange btn-full" style="margin-top:16px">
+        Tiến hành đặt hàng →
+      </a>
+      <p style="font-size:0.78rem;color:#9ca3af;text-align:center;margin-top:10px">
+        🔒 Thanh toán an toàn & bảo mật
+      </p>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-shell">
+      <div class="footer-top">
+        <div class="footer-col">
+          <h3>DURI</h3>
+          <p>Dong hanh cung cha me Viet trong hanh trinh cham soc be. Giai phap an toan, thong minh va tien loi cho gia dinh hien dai.</p>
+          <div class="footer-badges">
+            <span class="footer-badge">FDA Certified</span>
+            <span class="footer-badge">BPA-Free</span>
+            <span class="footer-badge">Korean Tech</span>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4>Lien he (Contact Us)</h4>
+          <p class="footer-contact-name">CONG TY TNHH PRESENT KOREA</p>
+          <ul>
+            <li>Tru so chinh: Busan, Han Quoc</li>
+            <li>Van phong dai dien: 669 Do Muoi, Phuong Linh Xuan, TP. Thu Duc (TP. HCM)</li>
+            <li>Hotline: 037.355.1519</li>
+            <li>Email: hello@duri.vn</li>
+            <li>8:00 - 17:30 (Thu 2 - Thu 7)</li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Ho tro khach hang (Support)</h4>
+          <ul>
+            <li><a href="orders.html">Cau hoi thuong gap (FAQs)</a></li>
+            <li><a href="products.html">Tu van san pham</a></li>
+            <li><a href="products.html">Goi uu dai</a></li>
+            <li><a href="orders.html">Huong dan bao hanh</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Chinh sach (Policy)</h4>
+          <ul>
+            <li><a href="orders.html">Chinh sach bao mat thong tin</a></li>
+            <li><a href="orders.html">Dieu khoan su dung</a></li>
+            <li><a href="orders.html">Chinh sach doi tra & bao hanh</a></li>
+            <li><a href="orders.html">Van chuyen & thanh toan</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <hr class="footer-divider" />
+
+      <div class="footer-bottom">
+        <p class="footer-social-title">Ket noi voi chung toi</p>
+        <div class="footer-social">
+          <a class="social-link" href="#" aria-label="Facebook">f</a>
+          <a class="social-link" href="#" aria-label="Instagram">ig</a>
+          <a class="social-link" href="#" aria-label="Zalo">Z</a>
+        </div>
+        <p class="footer-copy">DURI © 2024. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/ui-effects.js"></script>
+  <script src="js/cart.js"></script>
+</body>
+</html>

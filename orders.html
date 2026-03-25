@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DURI – Tra cứu đơn hàng</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">DURI</a>
+    <ul class="navbar-links">
+      <li><a href="index.html">Trang chủ</a></li>
+      <li class="nav-products">
+        <a href="products.html">Sản phẩm</a>
+        <ul class="nav-dropdown">
+          <li><a href="products.html">Tất cả sản phẩm</a></li>
+          <li><a href="products.html?category=Cho%20bé%20ăn">Cho bé ăn</a></li>
+          <li><a href="products.html?category=Đi%20vệ%20sinh">Đi vệ sinh</a></li>
+          <li><a href="products.html?category=Máy%20hút%20mũi">Máy hút mũi</a></li>
+          <li><a href="products.html?category=Phòng%20tắm">Phòng tắm</a></li>
+          <li><a href="products.html?category=Sinh%20hoạt">Sinh hoạt</a></li>
+        </ul>
+      </li>
+      <li><a href="orders.html">Tra cứu đơn hàng</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <a href="cart.html" class="btn btn-outline btn-sm cart-btn">
+        🛒 Giỏ hàng
+        <span class="cart-count" id="cart-count">0</span>
+      </a>
+    </div>
+  </nav>
+
+  <div class="orders-page">
+
+    <!-- Success banner (hiện sau khi đặt hàng thành công) -->
+    <div id="success-banner" style="display:none;background:linear-gradient(135deg,#dcfce7,#bbf7d0);border:1px solid #86efac;border-radius:16px;padding:24px;margin-bottom:28px;text-align:center">
+      <div style="font-size:2rem;margin-bottom:8px">🎉</div>
+      <h2 style="font-size:1.2rem;font-weight:700;color:#15803d;margin-bottom:6px">Đặt hàng thành công!</h2>
+      <p style="color:#166534;font-size:0.9rem" id="success-msg"></p>
+      <p style="color:#166534;font-size:0.85rem;margin-top:8px">
+        📧 Email xác nhận sẽ được gửi đến địa chỉ email của bạn.<br/>
+        Dùng mã đơn hàng bên dưới để tra cứu trạng thái bất cứ lúc nào.
+      </p>
+    </div>
+
+    <!-- Search box -->
+    <div style="background:#fff;border-radius:16px;border:1px solid #e8e3dd;padding:28px;margin-bottom:24px">
+      <h2 style="font-size:1.1rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#333;margin-bottom:16px">
+        🔍 Tra cứu đơn hàng
+      </h2>
+      <p style="font-size:0.88rem;color:#6b7280;margin-bottom:16px">
+        Nhập mã đơn hàng (dạng <strong>DURI########</strong>) để xem trạng thái giao hàng.
+      </p>
+      <div style="display:flex;gap:10px">
+        <input class="form-input" type="text" id="search-code"
+          placeholder="VD: DURI12345678"
+          style="flex:1;text-transform:uppercase"
+          onkeydown="if(event.key==='Enter') searchOrder()" />
+        <button class="btn btn-dark" onclick="searchOrder()">Tra cứu</button>
+      </div>
+    </div>
+
+    <!-- Kết quả -->
+    <div id="order-result"></div>
+
+  </div>
+
+  <footer class="footer">
+    <div class="footer-shell">
+      <div class="footer-top">
+        <div class="footer-col">
+          <h3>DURI</h3>
+          <p>Đồng hành cùng cha mẹ Việt trong hành trình chăm sóc bé. Giải pháp an toàn, thông minh và tiện lợi cho gia đình hiện đại.</p>
+          <div class="footer-badges">
+            <span class="footer-badge">FDA Certified</span>
+            <span class="footer-badge">BPA-Free</span>
+            <span class="footer-badge">Korean Tech</span>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4>Liên hệ (Contact Us)</h4>
+          <p class="footer-contact-name">CÔNG TY TNHH PRESENT KOREA</p>
+          <ul>
+            <li>Trụ sở chính: Busan, Hàn Quốc</li>
+            <li>Văn phòng đại diện: 669 Đỗ Mười, Phường Linh Xuân, TP. Thủ Đức (TP. HCM)</li>
+            <li>Hotline: 037.355.1519</li>
+            <li>Email: hello@duri.vn</li>
+            <li>8:00 - 17:30 (Thứ 2 - Thứ 7)</li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Hỗ trợ khách hàng (Support)</h4>
+          <ul>
+            <li><a href="orders.html">Câu hỏi thường gặp (FAQs)</a></li>
+            <li><a href="products.html">Tư vấn sản phẩm</a></li>
+            <li><a href="products.html">Gói ưu đãi</a></li>
+            <li><a href="orders.html">Hướng dẫn bảo hành</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Chính sách (Policy)</h4>
+          <ul>
+            <li><a href="orders.html">Chính sách bảo mật thông tin</a></li>
+            <li><a href="orders.html">Điều khoản sử dụng</a></li>
+            <li><a href="orders.html">Chính sách đổi trả & bảo hành</a></li>
+            <li><a href="orders.html">Vận chuyển & thanh toán</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <hr class="footer-divider" />
+
+      <div class="footer-bottom">
+        <p class="footer-social-title">Kết nối với chúng tôi</p>
+        <div class="footer-social">
+          <a class="social-link" href="#" aria-label="Facebook">f</a>
+          <a class="social-link" href="#" aria-label="Instagram">ig</a>
+          <a class="social-link" href="#" aria-label="Zalo">Z</a>
+        </div>
+        <p class="footer-copy">DURI © 2024. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- CHATBOT -->
+  <div id="chat-widget">
+    <div id="chat-window" style="display:none">
+      <div id="chat-header">
+        <div>
+          <div id="chat-name">DURI Assistant</div>
+          <div id="chat-status">🟢 Đang hoạt động</div>
+        </div>
+        <button id="chat-close-btn">✕</button>
+      </div>
+      <div id="chat-messages"></div>
+      <div id="chat-input-area">
+        <input id="chat-input" type="text" placeholder="Hỏi về đơn hàng của bạn..." />
+        <button id="chat-send">➤</button>
+      </div>
+    </div>
+    <button id="chat-toggle">💬</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/ui-effects.js"></script>
+  <script src="js/orders.js"></script>
+  <script src="js/chatbot.js"></script>
+</body>
+</html>
