@@ -13,98 +13,6 @@ const STATUS_CONFIG = {
   'Đã hủy':        { class: 'status-cancelled', icon: '❌', step: -1 },
 }
 
-// ── Gửi email ─────────────────────────────────────────────
-async function sendEmail(to, subject, body) {
-  try {
-    await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: to, subject, body })
-    })
-  } catch (err) {
-    console.error('Lỗi gửi email:', err)
-  }
-}
-
-// ── Footer dùng chung ─────────────────────────────────────
-const EMAIL_FOOTER = `
-  <div style="background:#f9fafb;padding:24px 40px;text-align:center;border-radius:0 0 12px 12px;border-top:1px solid #e8e3dd">
-    <p style="color:#374151;font-size:13px;font-weight:600;margin:0 0 8px">DURI Smart Baby Care</p>
-    <p style="color:#9ca3af;font-size:12px;margin:4px 0">
-      Website: <a href="https://present-landing-page.vercel.app/" style="color:#1d4ed8;text-decoration:none">present-landing-page.vercel.app</a>
-    </p>
-    <p style="color:#9ca3af;font-size:12px;margin:4px 0">
-      Email: <a href="mailto:durimall.vn@gmail.com" style="color:#1d4ed8;text-decoration:none">durimall.vn@gmail.com</a>
-    </p>
-    <p style="color:#9ca3af;font-size:12px;margin:10px 0 0">&copy; 2025 DURI Vietnam &ndash; Smart Baby Care Solutions from Korea</p>
-  </div>`
-
-// ── Template email cập nhật trạng thái ───────────────────
-function emailStatusTemplate(order, newStatus) {
-  const statusInfo = {
-    'Đang giao': {
-      color: '#0284c7',
-      bg: '#e0f2fe',
-      title: 'Đơn hàng đang được giao!',
-      message: 'Đơn hàng của bạn đã được bàn giao cho đơn vị vận chuyển và đang trên đường đến tay bạn.',
-      note: 'Thời gian dự kiến: 1-3 ngày làm việc tùy khu vực.'
-    },
-    'Đã giao': {
-      color: '#16a34a',
-      bg: '#dcfce7',
-      title: 'Đã giao hàng thành công!',
-      message: 'Đơn hàng của bạn đã được giao thành công. Cảm ơn bạn đã tin tưởng DURI!',
-      note: 'Nếu có bất kỳ vấn đề gì, vui lòng liên hệ: durimall.vn@gmail.com'
-    }
-  }
-
-  const info = statusInfo[newStatus]
-  if (!info) return null
-
-  return `
-  <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:580px;margin:0 auto;background:#ffffff">
-
-    <!-- Header -->
-    <div style="background:linear-gradient(135deg,#1f2937,#111827);padding:32px 40px;text-align:center;border-radius:12px 12px 0 0">
-      <h1 style="color:#ffffff;font-size:28px;margin:0;letter-spacing:4px">DURI</h1>
-      <p style="color:rgba(255,255,255,0.7);margin:8px 0 0;font-size:13px">Smart Baby Care from Korea</p>
-    </div>
-
-    <div style="padding:32px 40px">
-      <div style="text-align:center;margin-bottom:28px">
-        <h2 style="color:#111827;font-size:22px;margin:0 0 8px">${info.title}</h2>
-        <p style="color:#6b7280;font-size:14px;margin:0">Xin chào <strong>${order.customer_name}</strong></p>
-      </div>
-
-      <!-- Order code -->
-      <div style="background:#F5F1ED;border-radius:10px;padding:16px;text-align:center;margin-bottom:24px">
-        <p style="color:#9ca3af;font-size:12px;margin:0 0 4px;text-transform:uppercase;letter-spacing:1px">Mã đơn hàng</p>
-        <p style="color:#111827;font-size:22px;font-weight:700;margin:0;letter-spacing:2px">#${order.order_code}</p>
-      </div>
-
-      <!-- Status message -->
-      <div style="background:${info.bg};border-radius:10px;padding:16px;margin-bottom:24px">
-        <p style="color:${info.color};font-size:14px;margin:0;line-height:1.7">
-          ${info.message}<br/>
-          <span style="font-size:13px;opacity:0.8">${info.note}</span>
-        </p>
-      </div>
-
-      <!-- Shipping info -->
-      <div style="background:#f9fafb;border-radius:10px;padding:16px">
-        <h3 style="color:#111827;font-size:13px;margin:0 0 10px;text-transform:uppercase;letter-spacing:1px">Thông tin giao hàng</h3>
-        <p style="color:#374151;font-size:14px;margin:4px 0">Họ tên: ${order.customer_name}</p>
-        <p style="color:#374151;font-size:14px;margin:4px 0">Điện thoại: ${order.customer_phone || ''}</p>
-        <p style="color:#374151;font-size:14px;margin:4px 0">Địa chỉ: ${order.shipping_address}</p>
-      </div>
-    </div>
-
-    ${EMAIL_FOOTER}
-
-  </div>`
-}
-
 // ── Tra cứu đơn hàng ──────────────────────────────────────
 async function searchOrder() {
   const input  = document.getElementById('search-code')
@@ -177,6 +85,11 @@ function renderOrderCard(order) {
     </div>
   `).join('')
 
+  // Form feedback — chỉ hiện khi đơn "Đã giao"
+  const feedbackHTML = order.status === 'Đã giao'
+    ? renderFeedbackForm(order)
+    : ''
+
   return `
     <div class="order-card">
       <div class="order-card-header">
@@ -204,11 +117,13 @@ function renderOrderCard(order) {
         ${order.shipping_address}
         ${order.note ? `<br/>Ghi chú: ${order.note}` : ''}
       </div>
+
+      ${feedbackHTML}
     </div>
   `
 }
 
-// ── Tự động cập nhật trạng thái + gửi email ──────────────
+// ── Tự động cập nhật trạng thái (email do webhook xử lý) ──
 async function autoUpdateStatus(order) {
   if (order.status === 'Đã giao' || order.status === 'Đã hủy') return order
 
@@ -228,15 +143,6 @@ async function autoUpdateStatus(order) {
 
     if (!error) {
       order.status = targetStatus
-
-      const emailBody = emailStatusTemplate(order, targetStatus)
-      if (emailBody) {
-        const subjects = {
-          'Đang giao': 'DURI - Đơn hàng #' + order.order_code + ' đang được giao',
-          'Đã giao':   'DURI - Đơn hàng #' + order.order_code + ' đã giao thành công'
-        }
-        await sendEmail(order.customer_email, subjects[targetStatus], emailBody)
-      }
     }
   }
 
@@ -263,3 +169,126 @@ document.addEventListener('DOMContentLoaded', () => {
     window.history.replaceState({}, '', 'orders.html')
   }
 })
+
+// ── Render form feedback ──────────────────────────────────
+function renderFeedbackForm(order) {
+  return `
+    <div id="feedback-section" style="margin-top:24px;border-top:1px solid #e8e3dd;padding-top:20px">
+      <div id="feedback-done" style="display:none;background:#dcfce7;border-radius:12px;padding:18px;text-align:center">
+        <div style="font-size:1.5rem">🎉</div>
+        <p style="color:#15803d;font-weight:600;margin:8px 0 4px">Cảm ơn bạn đã đánh giá!</p>
+        <p style="color:#166534;font-size:0.85rem;margin:0">Phản hồi của bạn giúp DURI cải thiện dịch vụ tốt hơn.</p>
+      </div>
+
+      <div id="feedback-form">
+        <h3 style="font-size:0.95rem;font-weight:700;color:#111827;margin:0 0 16px">
+          ⭐ Đánh giá đơn hàng của bạn
+        </h3>
+
+        <!-- Đánh giá chung -->
+        <div style="margin-bottom:16px">
+          <p style="font-size:0.85rem;color:#374151;margin:0 0 8px;font-weight:600">Mức độ hài lòng chung</p>
+          <div class="star-group" id="star-rating" data-field="rating">
+            ${[1,2,3,4,5].map(n => `
+              <span class="star" data-val="${n}" onclick="selectStar('rating',${n})"
+                style="font-size:1.6rem;cursor:pointer;color:#d1d5db;transition:color 0.15s">★</span>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Giao hàng -->
+        <div style="margin-bottom:16px">
+          <p style="font-size:0.85rem;color:#374151;margin:0 0 8px;font-weight:600">Trải nghiệm giao hàng</p>
+          <div class="star-group" id="star-delivery" data-field="delivery_satisfaction">
+            ${[1,2,3,4,5].map(n => `
+              <span class="star" data-val="${n}" onclick="selectStar('delivery_satisfaction',${n})"
+                style="font-size:1.6rem;cursor:pointer;color:#d1d5db;transition:color 0.15s">★</span>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Sản phẩm -->
+        <div style="margin-bottom:16px">
+          <p style="font-size:0.85rem;color:#374151;margin:0 0 8px;font-weight:600">Chất lượng sản phẩm</p>
+          <div class="star-group" id="star-product" data-field="product_satisfaction">
+            ${[1,2,3,4,5].map(n => `
+              <span class="star" data-val="${n}" onclick="selectStar('product_satisfaction',${n})"
+                style="font-size:1.6rem;cursor:pointer;color:#d1d5db;transition:color 0.15s">★</span>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Nhận xét -->
+        <div style="margin-bottom:16px">
+          <p style="font-size:0.85rem;color:#374151;margin:0 0 8px;font-weight:600">Nhận xét thêm (không bắt buộc)</p>
+          <textarea id="fb-comment" rows="3" placeholder="Chia sẻ cảm nhận của bạn về sản phẩm và dịch vụ..."
+            style="width:100%;box-sizing:border-box;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;font-size:0.85rem;resize:vertical;font-family:inherit;outline:none"></textarea>
+        </div>
+
+        <!-- Giới thiệu -->
+        <div style="margin-bottom:20px;display:flex;align-items:center;gap:10px">
+          <input type="checkbox" id="fb-recommend" style="width:16px;height:16px;cursor:pointer" />
+          <label for="fb-recommend" style="font-size:0.85rem;color:#374151;cursor:pointer">
+            Tôi sẽ giới thiệu DURI cho bạn bè / người thân
+          </label>
+        </div>
+
+        <button onclick="submitFeedback('${order.id}','${order.order_code}','${order.customer_email}','${order.customer_name}')"
+          style="width:100%;padding:12px;background:#111827;color:#fff;border:none;border-radius:10px;font-size:0.9rem;font-weight:600;cursor:pointer;transition:opacity 0.2s"
+          onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1">
+          Gửi đánh giá
+        </button>
+      </div>
+    </div>
+  `
+}
+
+// ── State lưu điểm sao ────────────────────────────────────
+const _fbScores = { rating: 0, delivery_satisfaction: 0, product_satisfaction: 0 }
+
+function selectStar(field, val) {
+  _fbScores[field] = val
+  const fieldToId = {
+    rating: 'star-rating',
+    delivery_satisfaction: 'star-delivery',
+    product_satisfaction: 'star-product'
+  }
+  const container = document.getElementById(fieldToId[field])
+  if (!container) return
+  container.querySelectorAll('.star').forEach(star => {
+    star.style.color = parseInt(star.dataset.val) <= val ? '#f59e0b' : '#d1d5db'
+  })
+}
+
+async function submitFeedback(orderId, orderCode, customerEmail, customerName) {
+  if (_fbScores.rating === 0) {
+    showToast('Vui lòng chọn mức độ hài lòng chung', 'error'); return
+  }
+
+  const comment   = document.getElementById('fb-comment')?.value?.trim() || null
+  const recommend = document.getElementById('fb-recommend')?.checked || false
+
+  try {
+    const { error } = await db.from('feedback').insert({
+      order_id:              orderId,
+      order_code:            orderCode,
+      customer_email:        customerEmail,
+      customer_name:         customerName,
+      rating:                _fbScores.rating,
+      delivery_satisfaction: _fbScores.delivery_satisfaction || null,
+      product_satisfaction:  _fbScores.product_satisfaction || null,
+      comment:               comment,
+      would_recommend:       recommend
+    })
+
+    if (error) throw error
+
+    document.getElementById('feedback-form').style.display = 'none'
+    document.getElementById('feedback-done').style.display = 'block'
+    showToast('Đã gửi đánh giá, cảm ơn bạn!', 'success')
+
+  } catch (err) {
+    console.error('Lỗi gửi feedback:', err)
+    showToast('Có lỗi xảy ra, vui lòng thử lại', 'error')
+  }
+}

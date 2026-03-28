@@ -180,6 +180,17 @@ async function placeOrder() {
       }))
     )
     if (itemsError) throw itemsError
+    // Lưu / cập nhật customer
+const { error: custError } = await db
+  .from('customers')
+  .upsert({
+    email:      email,
+    full_name:  name,
+    phone:      phone,
+    address:    address,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'email' })
+if (custError) console.warn('Lưu customer lỗi (không ảnh hưởng đơn hàng):', custError)
 
     // Gửi email xác nhận
     await sendEmail(

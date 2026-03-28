@@ -125,7 +125,7 @@ function renderOrders(orders) {
   }).join('')
 }
 
-// ── Update status ─────────────────────────────────────────
+// ── Update status (email do webhook tự xử lý) ────────────
 async function updateOrderStatus(orderId, newStatus, selectEl) {
   const originalValue = selectEl.dataset.original || selectEl.value
   selectEl.disabled = true
@@ -138,28 +138,12 @@ async function updateOrderStatus(orderId, newStatus, selectEl) {
 
     if (error) throw error
 
-    // Cập nhật local data
     const order = allOrders.find(o => o.id === orderId)
     if (order) order.status = newStatus
 
     updateStats(allOrders)
     showToast(`✓ Đã cập nhật: ${newStatus}`, 'success')
     selectEl.dataset.original = newStatus
-
-    // Gửi email thông báo cho khách
-    const orderInfo = allOrders.find(o => o.id === orderId)
-    if (orderInfo && orderInfo.customer_email) {
-      await sendOrderEmail({
-        email: orderInfo.customer_email,
-        subject: `DURI – Cập nhật đơn hàng #${orderInfo.order_code}`,
-        orderCode: orderInfo.order_code,
-        customerName: orderInfo.customer_name,
-        status: newStatus,
-        items: orderInfo.order_items || [],
-        total: orderInfo.total_price,
-        address: orderInfo.shipping_address
-      })
-}
 
   } catch (err) {
     console.error(err)

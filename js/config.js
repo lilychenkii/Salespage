@@ -102,7 +102,7 @@ function addToCart(id, name, price, image_url) {
 document.addEventListener('DOMContentLoaded', updateCartCount)
 
 // ── Apps Script URL ───────────────────────────────────────
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzaciBPB7gdtWz7jdX34a8X5vWMOa46K_7nwOJ-Wvuxha8lmfoywOYOYQRrmEBo6Q71/exec'
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_2Q80SYzIqDlJX7HvMgWFil6nMBrLgwbStuDT5vv0WI7qOUKXG9dh2PV4w3LGwbnC/exec'
 
 // ── Gửi email thông báo trạng thái đơn hàng ──────────────
 async function sendOrderEmail({ email, subject, orderCode, customerName, status, items = [], total = 0, address = '' }) {
