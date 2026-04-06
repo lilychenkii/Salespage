@@ -150,6 +150,7 @@
               <th>Tổng tiền</th>
               <th>Ngày đặt</th>
               <th>Trạng thái</th>
+              <th>Chi tiết</th>
             </tr>
           </thead>
           <tbody id="orders-tbody"></tbody>
@@ -161,6 +162,18 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal xem chi tiết đơn hàng -->
+  <div id="admin-detail-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;padding:14px">
+    <div style="background:#fff;border-radius:16px;padding:24px;max-width:700px;width:100%;max-height:86vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.24)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:10px">
+        <h3 style="margin:0;color:#0f172a;font-size:1.1rem">Chi tiết đơn hàng</h3>
+        <button onclick="closeAdminDetailModal()" style="border:none;background:#f1f5f9;color:#334155;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1rem;flex-shrink:0">✕</button>
+      </div>
+
+      <div id="admin-detail-content" style="font-size:0.9rem;color:#475569"></div>
     </div>
   </div>
 

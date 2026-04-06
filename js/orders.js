@@ -40,7 +40,8 @@ async function searchOrder() {
       return
     }
 
-    const updatedOrder = await autoUpdateStatus(order)
+      const updatedOrder = await autoUpdateStatus(order)
+      await enrichOrderItemsWithImages(updatedOrder)
     result.innerHTML = renderOrderCard(updatedOrder)
 
   } catch (err) {
@@ -54,6 +55,35 @@ async function searchOrder() {
   }
 }
 
+  async function enrichOrderItemsWithImages(order) {
+    const items = Array.isArray(order?.order_items) ? order.order_items : []
+    if (!items.length) return
+
+    const productIds = [...new Set(
+      items
+        .map(item => item.product_id)
+        .filter(Boolean)
+    )]
+
+    if (!productIds.length) return
+
+    try {
+      const { data: products, error } = await db
+        .from('products')
+        .select('id, image_url')
+        .in('id', productIds)
+
+      if (error) throw error
+
+      const productMap = new Map((products || []).map(p => [p.id, p]))
+      items.forEach(item => {
+        const product = productMap.get(item.product_id)
+        item.image_url = resolveProductImage(item.product_id, product?.image_url || '')
+      })
+    } catch (err) {
+      console.warn('Không thể tải ảnh sản phẩm cho đơn hàng:', err)
+    }
+  }
 // ── Render order card ─────────────────────────────────────
 function renderOrderCard(order) {
   const cfg         = STATUS_CONFIG[order.status] || STATUS_CONFIG['Đang chuẩn bị']
@@ -78,12 +108,22 @@ function renderOrderCard(order) {
     `
   }).join('')
 
-  const itemsHTML = (order.order_items || []).map(item => `
-    <div class="order-item-row">
-      <span>${item.product_name} x ${item.quantity}</span>
-      <span>${formatPrice(item.unit_price * item.quantity)}</span>
-    </div>
-  `).join('')
+    const itemsHTML = (order.order_items || []).map(item => {
+      const imageUrl = item.image_url || 'https://placehold.co/80x80/F5F1ED/333333?text=DURI'
+      return `
+      <div class="order-item-row" style="display:flex;justify-content:space-between;gap:10px;align-items:center">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1">
+          <img
+            src="${imageUrl}"
+            alt="${item.product_name || 'Sản phẩm'}"
+            style="width:48px;height:48px;border-radius:8px;object-fit:cover;border:1px solid #e8e3dd;flex-shrink:0"
+            onerror="this.src='https://placehold.co/80x80/F5F1ED/333333?text=DURI'"
+          />
+          <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.product_name} x ${item.quantity}</span>
+        </div>
+        <span style="font-weight:700;white-space:nowrap">${formatPrice(item.unit_price * item.quantity)}</span>
+      </div>
+    `}).join('')
 
   // Form feedback — chỉ hiện khi đơn "Đã giao"
   const feedbackHTML = order.status === 'Đã giao'
@@ -108,6 +148,12 @@ function renderOrderCard(order) {
           <span>Tổng cộng</span>
           <span>${formatPrice(order.total_price)}</span>
         </div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;justify-content:flex-end">
+        <a href="order-details.html?code=${encodeURIComponent(order.order_code)}" class="btn btn-outline btn-sm">
+          🧾 Xem chi tiết đơn hàng
+        </a>
       </div>
 
       <div style="margin-top:12px;font-size:0.82rem;color:#6b7280;line-height:1.8">

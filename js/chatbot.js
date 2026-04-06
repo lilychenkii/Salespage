@@ -86,38 +86,64 @@ async function executeTool(toolName, args) {
         }
 
         return orders.map(o => {
-          const items = (o.order_items || [])
-            .map(i => `${i.product_name} x${i.quantity}`)
-            .join(', ')
           const date = new Date(o.created_at).toLocaleString('vi-VN')
-          return `Mã đơn: #${o.order_code} | Trạng thái: ${o.status} | Sản phẩm: ${items} | Tổng: ${o.total_price?.toLocaleString('vi-VN')}đ | Địa chỉ: ${o.shipping_address} | Đặt lúc: ${date}`
-        }).join('\n---\n')
+          const statusConfig = {
+            'Đang chuẩn bị': '📦',
+            'Đang giao': '🚚',
+            'Đã giao': '✅',
+            'Đã hủy': '❌',
+            'Đặt hàng': '📋'
+          }
+          const statusIcon = statusConfig[o.status] || '📋'
+          const itemsList = (o.order_items || [])
+            .map(i => `• ${i.product_name} ×${i.quantity}`)
+            .join('\n')
+
+          return [
+            `Chào ${o.customer_name || 'bạn'}, mình đã tra được đơn của bạn.`,
+            `Mã đơn: #${o.order_code}`,
+            `Trạng thái: ${statusIcon} ${o.status}`,
+            `Ngày đặt: ${date}`,
+            `Tổng tiền: ${(o.total_price || 0).toLocaleString('vi-VN')}đ`,
+            `Sản phẩm:\n${itemsList}`
+          ].join('\n')
+        }).join('\n\n---\n\n')
 
       } catch (err) {
+        console.error('Order tool error:', err)
         return 'Có lỗi khi tra cứu đơn hàng.'
       }
     }
 
     case 'get_product_info': {
       try {
-        const { data: products } = await db
-          .from('products')
-          .select('*')
-          .ilike('name', `%${args.product_name}%`)
+        let query = db.from('products').select('*')
+
+        if (args.category) {
+          query = query.eq('category', args.category)
+        } else {
+          query = query.ilike('name', `%${args.product_name}%`)
+        }
+
+        const { data: products } = await query
 
         if (!products || products.length === 0) {
           const { data: all } = await db.from('products').select('*')
           if (all && all.length > 0) {
-            return 'Sản phẩm DURI hiện có:\n' + all.map(p =>
-              `• ${p.name} — Giá: ${p.price?.toLocaleString('vi-VN')}đ | Còn: ${p.stock} sp | ${p.description}`
+            return 'Mình chưa tìm thấy đúng nhóm bạn hỏi, nhưng DURI hiện có các sản phẩm sau:\n\n' + all.map(p =>
+              `• ${p.name} — ${p.price?.toLocaleString('vi-VN')}đ — còn ${p.stock} sp`
             ).join('\n')
           }
           return 'Không tìm thấy sản phẩm phù hợp.'
         }
 
-        return products.map(p =>
-          `• ${p.name} — Giá: ${p.price?.toLocaleString('vi-VN')}đ | Còn: ${p.stock} sp | ${p.description}`
-        ).join('\n')
+        const intro = args.category
+          ? `Mình gợi ý nhóm ${args.category.toLowerCase()} phù hợp cho bé như sau:`
+          : 'Mình gợi ý một số sản phẩm phù hợp:'
+
+        return `${intro}\n\n${products.map(p =>
+          `• ${p.name} — ${p.price?.toLocaleString('vi-VN')}đ — còn ${p.stock} sp`
+        ).join('\n')}`
 
       } catch {
         return 'Có lỗi khi tìm sản phẩm.'
@@ -149,7 +175,10 @@ Nhiệm vụ:
 3. Thời gian giao hàng → dùng tool get_shipping_info
 4. Các câu hỏi khác → trả lời trực tiếp
 
-Luôn trả lời bằng tiếng Việt, ngắn gọn, thân thiện. Xưng "mình".`
+Luôn trả lời bằng tiếng Việt, ngắn gọn, thân thiện. Xưng "mình".
+Khi tra cứu đơn hàng, hãy mở đầu bằng lời chào theo tên khách nếu có.
+Khi trả lời về sản phẩm, bám sát đúng nhu cầu trong câu hỏi, không liệt kê quá nhiều thứ không liên quan.
+Ưu tiên trả lời theo từng dòng ngắn, dễ đọc.`
 
 let conversationHistory = []
 
@@ -189,6 +218,15 @@ async function localAssistantReply(userText = '') {
   const shippingKeywords = /(ship|giao hàng|vận chuyển|bao lâu|mấy ngày)/
   const productKeywords = /(sản phẩm|giá|bao nhiêu|còn hàng|danh mục|mua gì)/
 
+  const categoryMap = [
+    { keywords: /(ăn|bé ăn|cho bé ăn|ăn dặm|bú|sữa|bình sữa)/, category: 'Cho bé ăn', prompt: 'Mình gợi ý nhóm đồ cho bé ăn, bạn có thể quan tâm: bình sữa, núm ti, đồ ăn dặm.' },
+    { keywords: /(vệ sinh|đi vệ sinh|bỉm|tã|nước rửa|lau chùi)/, category: 'Đi vệ sinh', prompt: 'Mình gợi ý nhóm đồ đi vệ sinh, bạn có thể xem: bệ ngồi toilet, giấy ướt, phụ kiện vệ sinh.' },
+    { keywords: /(tắm|phòng tắm|tắm gội|rửa mặt)/, category: 'Phòng tắm', prompt: 'Mình gợi ý nhóm đồ phòng tắm, thường phù hợp là vòi rửa, phụ kiện tắm và vệ sinh.' },
+    { keywords: /(sinh hoạt|ngủ|đồ dùng|đồ chơi|gia đình)/, category: 'Sinh hoạt', prompt: 'Mình gợi ý nhóm đồ sinh hoạt, phù hợp cho nhu cầu dùng hằng ngày của bé.' },
+  ]
+
+  const matchedCategory = categoryMap.find(item => item.keywords.test(text))
+
   if (orderKeywords.test(text)) {
     const orderCode = parseOrderCode(userText) || findRecentOrderCodeFromHistory()
     const email = parseEmail(userText)
@@ -208,13 +246,31 @@ async function localAssistantReply(userText = '') {
   }
 
   if (productKeywords.test(text)) {
+    if (matchedCategory) {
+      return executeTool('get_product_info', {
+        category: matchedCategory.category,
+        product_name: matchedCategory.category
+      })
+    }
+
     const cleaned = userText
       .replace(/(sản phẩm|giá|bao nhiêu|còn hàng|danh mục|mua gì|cho mình|giúp mình)/gi, ' ')
       .replace(/\s+/g, ' ')
       .trim()
 
+    if (!cleaned || cleaned.length < 3 || /(tư vấn|sản phẩm|bé|trẻ em)/i.test(cleaned)) {
+      return 'Mình có thể tư vấn theo nhu cầu của bé. Bạn đang quan tâm nhóm nào hơn: ăn, vệ sinh, tắm hay sinh hoạt?'
+    }
+
     return executeTool('get_product_info', {
       product_name: cleaned || 'DURI'
+    })
+  }
+
+  if (matchedCategory) {
+    return executeTool('get_product_info', {
+      category: matchedCategory.category,
+      product_name: matchedCategory.category
     })
   }
 
@@ -402,7 +458,14 @@ function addMessage(role, text) {
   const messages = document.getElementById('chat-messages')
   const div = document.createElement('div')
   div.className = role === 'bot' ? 'msg-bot' : 'msg-user'
-  div.innerHTML = text.replace(/\n/g, '<br/>')
+  
+  // Nếu là HTML (bắt đầu với <), hiển thị trực tiếp; nếu là plain text thì convert \n → <br/>
+  if (typeof text === 'string' && text.trim().startsWith('<')) {
+    div.innerHTML = text
+  } else {
+    div.innerHTML = (text || '').toString().replace(/\n/g, '<br/>')
+  }
+  
   messages.appendChild(div)
   messages.scrollTop = messages.scrollHeight
 }
